@@ -46,6 +46,22 @@
                                     {{ Fleet_Name }}
                                 </v-list-item-subtitle>
                             </v-list-item>
+                            <v-list-item>
+                                <v-list-item-title>
+                                    Vehicle's Speed
+                                </v-list-item-title>
+                                <v-list-item-subtitle>
+                                    {{ speed }}
+                                </v-list-item-subtitle>
+                            </v-list-item>
+                            <v-list-item>
+                                <v-list-item-title>
+                                    Vehicle's Mileage
+                                </v-list-item-title>
+                                <v-list-item-subtitle>
+                                    {{ mileage }}
+                                </v-list-item-subtitle>
+                            </v-list-item>
                         </v-list>
                     </v-card>
                 </v-flex>
@@ -55,15 +71,10 @@
                         <v-card-text v-for="error in errors" :key="error.id" class="error--text">
                             {{ error.toString() }}
                         </v-card-text>
-                        <v-card-actions>
-                            <v-btn
-                                color="blue darken-4"
-                                @click="check_faults"
-                                dark
-                            >
-                                Check Faults
-                            </v-btn>
-                        </v-card-actions>
+                        <v-card-text v-if="errors.length ===0" class="error--text">
+                            No faults found!
+                        </v-card-text>
+                        
                     </v-card>
                 </v-flex>
                 <v-flex xs8 sm6 md4 class="my-10 pa-3">
@@ -84,6 +95,7 @@ import router from '../router';
 import HereMap from '../components/HereMap'
 import db from '@/firebase';
 import firebase from 'firebase';
+const https = require('https');
 
 export default {
 
@@ -125,6 +137,48 @@ export default {
         this.user = null;
         router.push('/')
       }
+
+    /*
+    Read data from whole feed
+    https://api.thingspeak.com/channels/1443892/feeds.json?api_key=UH6F84XDQDXV8JA8
+
+    Read data from a field
+    https://api.thingspeak.com/channels/1443892/fields/1/last.json?api_key=UH6F84XDQDXV8JA8
+    */
+
+    var all_data;
+    https.get('https://api.thingspeak.com/channels/1443892/feeds.json?api_key=UH6F84XDQDXV8JA8',
+    (resp) => {
+    let data = '';
+    // A chunk of data has been received.
+    resp.on('data', (chunk) => {
+        data += chunk;
+    });
+
+    // The whole response has been received. Print out the result.
+    resp.on('end', () => {
+        all_data = JSON.parse(data);
+        console.log(all_data);
+        this.center.lng = all_data["feeds"].slice(-1)[0]["field1"];
+        if(this.center.lng !== 'null'){
+        this.center.lng = this.center.lng.substring(0,this.center.lng.length-1);
+        }
+        this.center.lat = all_data["feeds"].slice(-1)[0]["field2"];
+        // var coordinate1 = "73.206503."
+        // coordinate1 = coordinate1.substring(0,coordinate1.length-1);
+        // var coordinate2 = "33.567133";
+        console.log(this.center.lng+','+this.center.lat);
+        // console.log(coordinate1+','+coordinate2);
+        this.speed = all_data["feeds"].slice(-1)[0]["field3"];
+        this.mileage = all_data["feeds"].slice(-1)[0]["field4"];
+        this.errors = all_data["feeds"].slice(-1)[0]["field5"];
+        console.log(this.speed+','+this.mileage);
+
+    });
+
+    }).on("error", (err) => {
+    console.log("Error: " + err.message);
+    });
     });
   },
 
@@ -133,7 +187,6 @@ export default {
         return {
             id: 0,
             errors: [
-             "No fault found!",
             ],
 
             temp_errors: [
@@ -141,9 +194,11 @@ export default {
                 "P0300"
             ],
             center: { 
-                lat: 30.197979, 
-                lng: 71.472498
+                lat: '', 
+                lng: ''
             },
+            mileage: '',
+            speed: '',
             all_reg_num: [],
             user: '',
             Vehicle_Manufacturer: '',
@@ -153,7 +208,6 @@ export default {
             Vehicle_Type: ''
 
         }
-
     },
     methods: {
         check_faults() {

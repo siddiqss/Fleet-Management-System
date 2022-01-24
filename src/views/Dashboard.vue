@@ -35,12 +35,15 @@
           </v-card-actions>
         </v-card>
       </v-flex> 
-      <v-flex xs8 sm6 md4 class="my-10 pa-3">
+      <v-flex xs8 sm6 md4 class="my-10 pa-3" >
         <v-card outlined class="pa-3 error" width="300px">
           <v-card-title>ALERTS</v-card-title>
           <v-card-subtitle>Faults identified in vehicles</v-card-subtitle>
           <v-card-text v-for="error in errors" :key="error.id" class="subtitle-1 font-weight-bold text-left black--text">
             {{ error }}
+          </v-card-text>
+          <v-card-text v-if="errors.length === 0" class="subtitle-1 font-weight-bold text-left black--text">
+            No Faults Found!
           </v-card-text>
         </v-card>
       </v-flex> 
@@ -61,8 +64,7 @@ export default {
       num_vehicles: 0,
       num_fleet: 0,
       errors: [
-        'P0300 in ABC123',
-        'P0100 in XYZ000',
+
       ],
       fleets: [],
       user: '',
