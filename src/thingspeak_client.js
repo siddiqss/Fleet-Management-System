@@ -1,15 +1,8 @@
 const https = require('https');
-
-/*
-Read data from whole feed
-https://api.thingspeak.com/channels/1443892/feeds.json?api_key=UH6F84XDQDXV8JA8
-
-Read data from a field
-https://api.thingspeak.com/channels/1443892/fields/1/last.json?api_key=UH6F84XDQDXV8JA8
-*/
+const config = require("config.json");
 
 var all_data, longitude, latitude, speed, mileage;
-https.get('https://api.thingspeak.com/channels/1443892/feeds.json?api_key=UH6F84XDQDXV8JA8',
+https.get(`https://api.thingspeak.com/channels/1443892/feeds.json?api_key=${config.thingspeakAPI}`,
  (resp) => {
   let data = '';
   // A chunk of data has been received.
